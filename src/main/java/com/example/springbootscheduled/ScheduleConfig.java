@@ -24,9 +24,12 @@ public class ScheduleConfig implements SchedulingConfigurer {
     @Value("${delete.dateTime}")
     public  String delDay;
 
+    @Value("${delete.startDate}")
+    public  String startDate;
+    
     @Override
     public void configureTasks(ScheduledTaskRegistrar scheduledTaskRegistrar) {
         //参数传入一个size为10的线程池
-        scheduledTaskRegistrar.setScheduler(Executors.newScheduledThreadPool(2));
+        scheduledTaskRegistrar.setScheduler(Executors.newScheduledThreadPool(5));
     }
 }

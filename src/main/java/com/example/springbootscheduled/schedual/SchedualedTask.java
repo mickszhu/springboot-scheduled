@@ -12,7 +12,10 @@ import java.io.InputStreamReader;
 import java.text.MessageFormat;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
+
 /**
  * @program: springboot-scheduled
  * @description: 定时器类
@@ -43,17 +46,40 @@ public class SchedualedTask {
      */
     @Scheduled(cron = "*/6 * * * * ?")
     public void task1(){
-        log.info("task1========执行任务开始==================================================，删除天数："+scheduleConfig.delDay);
-        String[] cmds={"curl","-XDELETE",""};//必须分开写，不能有空格
         LocalDate delDate = LocalDate.now().minusDays(Long.parseLong(scheduleConfig.delDay));
-        log.info("删除截止的日期：{}",delDate);
-        DateTimeFormatter dtf3 = DateTimeFormatter.ofPattern("yyyy.MM.dd");
-        String strDate3 = dtf3.format(delDate);
-        String url = MessageFormat.format("http://127.0.0.1:9200/*-{0}",strDate3);
-        cmds[2] = url;
-        log.info(Arrays.toString(cmds));
-        log.info(execCurl(cmds));
-        log.info("task1========执行任务结束==================================================，删除天数："+scheduleConfig.delDay);
+        LocalDate starDate = LocalDate.parse(scheduleConfig.startDate);
+        log.info("task1========执行任务开始==================================================，删除从："+starDate+"到："+delDate);
+        String[] cmds={"curl","-XDELETE",""};//必须分开写，不能有空格
+        List<LocalDate> listDays=new ArrayList<>();
+        if(delDate.isAfter(starDate)){
+            listDays = getDelDate(starDate,delDate);
+        }else{
+            listDays = getDelDate(delDate,starDate);
+        }
+        for (LocalDate delTime : listDays){
+            //LocalDate delDate = LocalDate.now().minusDays(Long.parseLong(scheduleConfig.delDay));
+            log.info("当前执行删除的日期：{}",delTime);
+            DateTimeFormatter dtf3 = DateTimeFormatter.ofPattern("yyyy.MM.dd");
+            String strDate3 = dtf3.format(delTime);
+            String url = MessageFormat.format("http://127.0.0.1:9200/*-{0}",strDate3);
+            cmds[2] = url;
+            log.info(delTime+"-当前执行参数：" + Arrays.toString(cmds));
+            log.info("执行结果：" + execCurl(cmds));
+        }
+        log.info("task1========执行任务结束==================================================，删除从："+scheduleConfig.startDate+"到："+delDate);
+    }
+
+    private List<LocalDate> getDelDate(LocalDate startDate,LocalDate endDate){
+        List<LocalDate> result = new ArrayList<>();
+        while (true){
+            if(endDate.isAfter(startDate)){
+                result.add(endDate);
+                endDate = endDate.minusDays(-1);
+            }else {
+                break;
+            }
+        }
+        return  result;
     }
 
     //这里执行cmds命令
