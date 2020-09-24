@@ -74,8 +74,9 @@ public class SchedualedTask {
         while (true){
             if(endDate.isAfter(startDate)){
                 result.add(endDate);
-                endDate = endDate.minusDays(-1);
+                endDate = endDate.minusDays(1);
             }else {
+                result.add(endDate);
                 break;
             }
         }
